@@ -35,37 +35,45 @@ export function useGraphState({ etymologyData, initialWordId }: UseGraphStatePro
   const [edges, setEdges] = useState<Edge[]>(getInitialGraph().edges);
 
   const expandNode = useCallback((nodeId: string) => {
-    if (expandedNodeIds.has(nodeId)) {
-      return;
-    }
+    setExpandedNodeIds(prev => {
+      if (prev.has(nodeId)) {
+        return prev;
+      }
 
-    const parentData = getParentWords(nodeId);
+      const parentData = getParentWords(nodeId);
 
-    if (parentData.length === 0) {
-      return;
-    }
+      if (parentData.length === 0) {
+        return prev;
+      }
 
-    const newWords = parentData.map(p => p.word);
-    const newRelationships = parentData.map(p => p.relationship);
+      const newWords = parentData.map(p => p.word);
+      const newRelationships = parentData.map(p => p.relationship);
 
-    const existingNodeIds = new Set(nodes.map(n => n.id));
-    const wordsToAdd = newWords.filter(w => !existingNodeIds.has(w.id));
+      setNodes(currentNodes => {
+        const existingNodeIds = new Set(currentNodes.map(n => n.id));
+        const wordsToAdd = newWords.filter(w => !existingNodeIds.has(w.id));
 
-    if (wordsToAdd.length > 0) {
-      const newNodes = convertWordsToNodes(wordsToAdd);
-      setNodes(prev => [...prev, ...newNodes]);
-    }
+        if (wordsToAdd.length > 0) {
+          const newNodes = convertWordsToNodes(wordsToAdd);
+          return [...currentNodes, ...newNodes];
+        }
+        return currentNodes;
+      });
 
-    const existingEdgeIds = new Set(edges.map(e => e.id));
-    const relationshipsToAdd = newRelationships.filter(r => !existingEdgeIds.has(r.id));
+      setEdges(currentEdges => {
+        const existingEdgeIds = new Set(currentEdges.map(e => e.id));
+        const relationshipsToAdd = newRelationships.filter(r => !existingEdgeIds.has(r.id));
 
-    if (relationshipsToAdd.length > 0) {
-      const newEdges = convertRelationshipsToEdges(relationshipsToAdd);
-      setEdges(prev => [...prev, ...newEdges]);
-    }
+        if (relationshipsToAdd.length > 0) {
+          const newEdges = convertRelationshipsToEdges(relationshipsToAdd);
+          return [...currentEdges, ...newEdges];
+        }
+        return currentEdges;
+      });
 
-    setExpandedNodeIds(prev => new Set([...prev, nodeId]));
-  }, [nodes, edges, expandedNodeIds]);
+      return new Set([...prev, nodeId]);
+    });
+  }, []);
 
   const focusOnWord = useCallback((wordId: string) => {
     const word = etymologyData.words.find(w => w.id === wordId);
@@ -73,16 +81,18 @@ export function useGraphState({ etymologyData, initialWordId }: UseGraphStatePro
       return;
     }
 
-    const existingNode = nodes.find(n => n.id === wordId);
-    if (!existingNode) {
-      const newNode = convertWordsToNodes([word]);
-      setNodes([...newNode]);
-      setEdges([]);
-      setExpandedNodeIds(new Set());
-    }
+    setNodes(currentNodes => {
+      const existingNode = currentNodes.find(n => n.id === wordId);
+      if (!existingNode) {
+        // Add the node if it doesn't exist, but keep existing nodes
+        const newNode = convertWordsToNodes([word]);
+        return [...currentNodes, ...newNode];
+      }
+      return currentNodes;
+    });
 
     setSelectedNodeId(wordId);
-  }, [etymologyData, nodes]);
+  }, [etymologyData]);
 
   const updateNodeData = useCallback((nodeId: string, updates: Partial<Node['data']>) => {
     setNodes(prev =>
