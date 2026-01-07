@@ -6,6 +6,8 @@ interface SimulationNode extends d3.SimulationNodeDatum {
   id: string;
   x?: number;
   y?: number;
+  fx?: number | null;  // Fixed x position (for dragging)
+  fy?: number | null;  // Fixed y position (for dragging)
 }
 
 interface SimulationLink extends d3.SimulationLinkDatum<SimulationNode> {
@@ -16,6 +18,7 @@ interface SimulationLink extends d3.SimulationLinkDatum<SimulationNode> {
 export function useGraphLayout(nodes: Node[], edges: Edge[], enabled: boolean = true) {
   const { setNodes } = useReactFlow();
   const simulationRef = useRef<d3.Simulation<SimulationNode, SimulationLink> | null>(null);
+  const simNodesRef = useRef<SimulationNode[]>([]);
 
   useEffect(() => {
     if (!enabled || nodes.length === 0) {
@@ -25,8 +28,12 @@ export function useGraphLayout(nodes: Node[], edges: Edge[], enabled: boolean = 
     const simNodes: SimulationNode[] = nodes.map(node => ({
       id: node.id,
       x: node.position.x || 0,
-      y: node.position.y || 0
+      y: node.position.y || 0,
+      fx: (node as any).dragging ? node.position.x : null,
+      fy: (node as any).dragging ? node.position.y : null
     }));
+
+    simNodesRef.current = simNodes;
 
     const simLinks: SimulationLink[] = edges.map(edge => ({
       source: edge.source,
@@ -73,5 +80,5 @@ export function useGraphLayout(nodes: Node[], edges: Edge[], enabled: boolean = 
     };
   }, [nodes.length, edges.length, enabled, setNodes]);
 
-  return simulationRef;
+  return { simulationRef, simNodesRef };
 }

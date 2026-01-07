@@ -8,7 +8,8 @@ import ReactFlow, {
   OnEdgesChange,
   applyNodeChanges,
   applyEdgeChanges,
-  ReactFlowProvider
+  ReactFlowProvider,
+  Node as ReactFlowNode
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import WordNode from '../../components/nodes/WordNode';
@@ -43,7 +44,7 @@ function EtymologyGraphInner({ initialWordId, onNodeSelect, searchWordId }: Etym
     initialWordId
   });
 
-  useGraphLayout(nodes, edges, true);
+  const { simNodesRef } = useGraphLayout(nodes, edges, true);
 
   useEffect(() => {
     markNodeAsHavingParents();
@@ -86,6 +87,42 @@ function EtymologyGraphInner({ initialWordId, onNodeSelect, searchWordId }: Etym
     onNodeSelect?.(null);
   }, [setSelectedNodeId, onNodeSelect]);
 
+  const onNodeDragStart = useCallback(
+    (_event: React.MouseEvent, node: ReactFlowNode) => {
+      // Fix node position in simulation so d3 doesn't move it
+      const simNode = simNodesRef.current.find(n => n.id === node.id);
+      if (simNode) {
+        simNode.fx = simNode.x;
+        simNode.fy = simNode.y;
+      }
+    },
+    [simNodesRef]
+  );
+
+  const onNodeDrag = useCallback(
+    (_event: React.MouseEvent, node: ReactFlowNode) => {
+      // Update simulation node position as user drags
+      const simNode = simNodesRef.current.find(n => n.id === node.id);
+      if (simNode) {
+        simNode.fx = node.position.x;
+        simNode.fy = node.position.y;
+      }
+    },
+    [simNodesRef]
+  );
+
+  const onNodeDragStop = useCallback(
+    (_event: React.MouseEvent, node: ReactFlowNode) => {
+      // Unfix node so simulation can move it again
+      const simNode = simNodesRef.current.find(n => n.id === node.id);
+      if (simNode) {
+        simNode.fx = null;
+        simNode.fy = null;
+      }
+    },
+    [simNodesRef]
+  );
+
   return (
     <div className="etymology-graph-container">
       <ReactFlow
@@ -95,6 +132,9 @@ function EtymologyGraphInner({ initialWordId, onNodeSelect, searchWordId }: Etym
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
+        onNodeDragStart={onNodeDragStart}
+        onNodeDrag={onNodeDrag}
+        onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         fitView
         minZoom={0.1}
