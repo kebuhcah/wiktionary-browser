@@ -16,6 +16,7 @@ import WordNode from '../../components/nodes/WordNode';
 import { useGraphState } from './useGraphState';
 import { useGraphLayout } from './useGraphLayout';
 import { mockEtymologyData } from '../../data/mockEtymologyData';
+import { updateEdgeHandles } from '../../utils/edgeHelpers';
 import './EtymologyGraph.css';
 
 const nodeTypes: NodeTypes = {
@@ -49,6 +50,21 @@ function EtymologyGraphInner({ initialWordId, onNodeSelect, searchWordId }: Etym
   useEffect(() => {
     markNodeAsHavingParents();
   }, [nodes, markNodeAsHavingParents]);
+
+  // Update edge handles based on node positions
+  useEffect(() => {
+    const updatedEdges = updateEdgeHandles(nodes, edges);
+
+    // Only update if handles actually changed
+    const hasChanges = updatedEdges.some((edge, i) =>
+      edge.sourceHandle !== edges[i]?.sourceHandle ||
+      edge.targetHandle !== edges[i]?.targetHandle
+    );
+
+    if (hasChanges) {
+      setEdges(updatedEdges);
+    }
+  }, [nodes, edges, setEdges]);
 
   useEffect(() => {
     if (searchWordId) {
@@ -140,7 +156,7 @@ function EtymologyGraphInner({ initialWordId, onNodeSelect, searchWordId }: Etym
         minZoom={0.1}
         maxZoom={2}
         defaultEdgeOptions={{
-          type: 'smoothstep'
+          type: 'default'  // Bezier curves - smooth and organic
         }}
       >
         <Background />

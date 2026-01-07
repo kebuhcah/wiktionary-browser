@@ -23,7 +23,11 @@ function WordNode({ data, selected }: WordNodeProps) {
         boxShadow: selected ? `0 0 0 2px ${data.color}` : undefined
       }}
     >
-      <Handle type="target" position={Position.Top} />
+      {/* Target handles (incoming edges) on all sides */}
+      <Handle type="target" position={Position.Top} id="target-top" />
+      <Handle type="target" position={Position.Bottom} id="target-bottom" />
+      <Handle type="target" position={Position.Left} id="target-left" />
+      <Handle type="target" position={Position.Right} id="target-right" />
 
       <div className="word-node-content">
         <div className="word-text">{data.word}</div>
@@ -47,7 +51,11 @@ function WordNode({ data, selected }: WordNodeProps) {
         </div>
       )}
 
-      <Handle type="source" position={Position.Bottom} />
+      {/* Source handles (outgoing edges) on all sides */}
+      <Handle type="source" position={Position.Top} id="source-top" />
+      <Handle type="source" position={Position.Bottom} id="source-bottom" />
+      <Handle type="source" position={Position.Left} id="source-left" />
+      <Handle type="source" position={Position.Right} id="source-right" />
     </div>
   );
 }

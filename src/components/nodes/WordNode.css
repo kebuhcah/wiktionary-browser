@@ -78,3 +78,14 @@
   background: #2563eb;
   transform: translateX(-50%) scale(1.1);
 }
+
+/* Hide handles for cleaner look */
+.word-node .react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Optional: show on hover for debugging */
+.word-node:hover .react-flow__handle {
+  opacity: 0.3;
+}
