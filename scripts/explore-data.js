@@ -48,21 +48,21 @@ async function exploreData(searchWord = null) {
       }
 
       // If searching for specific word
-      if (searchWord && entry.word === searchWord && entry.lang === 'English') {
+      if (searchWord && entry.word === searchWord) {
         foundWord = entry;
-        console.log('\n\n✅ Found word:', searchWord);
+        console.log('\n\n✅ Found word:', searchWord, `(${entry.lang})`);
         console.log(JSON.stringify(entry, null, 2));
         break;
       }
 
-      // Collect interesting examples
+      // Collect interesting examples (from all languages)
       if (!searchWord &&
-          entry.lang === 'English' &&
           entry.etymology_templates &&
           entry.etymology_templates.length > 0 &&
-          etymologyExamples.length < 5) {
+          etymologyExamples.length < 10) {
         etymologyExamples.push({
           word: entry.word,
+          lang: entry.lang,
           pos: entry.pos,
           etymology_text: entry.etymology_text,
           etymology_templates: entry.etymology_templates.slice(0, 3),
@@ -86,9 +86,9 @@ async function exploreData(searchWord = null) {
   console.log(`Words with etymology: ${wordsWithEtymology.toLocaleString()}`);
 
   if (!searchWord && etymologyExamples.length > 0) {
-    console.log('\n=== Example Entries with Etymology ===\n');
+    console.log('\n=== Example Entries with Etymology (All Languages) ===\n');
     etymologyExamples.forEach((example, i) => {
-      console.log(`\n${i + 1}. "${example.word}" (${example.pos})`);
+      console.log(`\n${i + 1}. "${example.word}" [${example.lang}] (${example.pos})`);
       console.log(`   Etymology: ${example.etymology_text?.substring(0, 150)}...`);
       if (example.etymology_templates) {
         console.log(`   Templates: ${example.etymology_templates.map(t => t.name).join(', ')}`);
