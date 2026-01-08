@@ -5,10 +5,9 @@
  * Usage: node scripts/explore-data.js [word]
  */
 
-const fs = require('fs');
-const readline = require('readline');
-const zlib = require('zlib');
-const { pipeline } = require('stream/promises');
+import fs from 'fs';
+import readline from 'readline';
+import zlib from 'zlib';
 
 const DATA_FILE = './data/raw-wiktextract-data.jsonl.gz';
 
