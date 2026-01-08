@@ -25,7 +25,7 @@ async function exploreData(searchWord = null) {
   let wordsWithEtymology = 0;
   let englishWords = 0;
   const etymologyExamples = [];
-  let foundWord = null;
+  const foundWords = []; // Changed to array to collect all matches
 
   for await (const line of rl) {
     lineCount++;
@@ -47,12 +47,21 @@ async function exploreData(searchWord = null) {
         wordsWithEtymology++;
       }
 
-      // If searching for specific word
+      // If searching for specific word, collect all language matches
       if (searchWord && entry.word === searchWord) {
-        foundWord = entry;
-        console.log('\n\n✅ Found word:', searchWord, `(${entry.lang})`);
-        console.log(JSON.stringify(entry, null, 2));
-        break;
+        foundWords.push({
+          lang: entry.lang,
+          pos: entry.pos,
+          etymology_text: entry.etymology_text,
+          etymology_templates: entry.etymology_templates,
+          senses: entry.senses?.slice(0, 2), // Just first 2 senses
+          categories: entry.categories?.slice(0, 5)
+        });
+
+        // Stop after finding 10 different language entries
+        if (foundWords.length >= 10) {
+          break;
+        }
       }
 
       // Collect interesting examples (from all languages)
@@ -99,8 +108,39 @@ async function exploreData(searchWord = null) {
     });
   }
 
-  if (searchWord && !foundWord) {
-    console.log(`\n❌ Word "${searchWord}" not found in data`);
+  if (searchWord) {
+    if (foundWords.length === 0) {
+      console.log(`\n❌ Word "${searchWord}" not found in data`);
+    } else {
+      console.log(`\n\n✅ Found "${searchWord}" in ${foundWords.length} language(s):\n`);
+
+      foundWords.forEach((entry, i) => {
+        console.log(`\n${'='.repeat(70)}`);
+        console.log(`${i + 1}. ${searchWord} [${entry.lang}] (${entry.pos || 'unknown'})`);
+        console.log(`${'='.repeat(70)}`);
+
+        if (entry.etymology_text) {
+          console.log(`\n📜 Etymology:`);
+          console.log(`   ${entry.etymology_text.substring(0, 300)}${entry.etymology_text.length > 300 ? '...' : ''}`);
+        }
+
+        if (entry.etymology_templates && entry.etymology_templates.length > 0) {
+          console.log(`\n🔗 Templates: ${entry.etymology_templates.slice(0, 5).map(t => t.name).join(', ')}`);
+        }
+
+        if (entry.senses && entry.senses.length > 0) {
+          console.log(`\n📖 Definitions:`);
+          entry.senses.forEach((sense, j) => {
+            const gloss = sense.glosses?.[0] || sense.raw_glosses?.[0] || 'No definition';
+            console.log(`   ${j + 1}. ${gloss.substring(0, 150)}${gloss.length > 150 ? '...' : ''}`);
+          });
+        }
+
+        if (entry.categories && entry.categories.length > 0) {
+          console.log(`\n🏷️  Categories: ${entry.categories.slice(0, 3).join(', ')}`);
+        }
+      });
+    }
   }
 }
 
