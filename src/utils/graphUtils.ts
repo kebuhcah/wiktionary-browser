@@ -19,8 +19,10 @@ export function convertRelationshipsToEdges(
 ): Edge[] {
   return relationships.map(rel => ({
     id: rel.id,
-    source: rel.source,
-    target: rel.target,
+    // Reverse direction: arrows point from parent (target) → child (source)
+    // This shows etymology flow from ancient → modern
+    source: rel.target,  // Etymology source (parent word)
+    target: rel.source,  // Derived word (child)
     type: rel.type === 'cognate_with' ? 'default' : 'default',
     animated: rel.type === 'borrowed_from',
     style: {
