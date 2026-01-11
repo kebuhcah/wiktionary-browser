@@ -24,17 +24,47 @@ async function exploreData(searchWord = null, filterLangs = []) {
     crlfDelay: Infinity
   });
 
+  const startTime = Date.now();
+  const ESTIMATED_TOTAL_ENTRIES = 10_400_000; // ~10.4M entries in full dataset
+
   let lineCount = 0;
   let wordsWithEtymology = 0;
   let englishWords = 0;
   const etymologyExamples = [];
   const foundWords = []; // Changed to array to collect all matches
 
+  function formatTime(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  }
+
   for await (const line of rl) {
     lineCount++;
 
     if (lineCount % 100000 === 0) {
-      process.stdout.write(`\rProcessed ${lineCount.toLocaleString()} entries...`);
+      const elapsed = Date.now() - startTime;
+      const rate = lineCount / (elapsed / 1000); // entries per second
+      const remaining = ESTIMATED_TOTAL_ENTRIES - lineCount;
+      const estimatedRemaining = remaining / rate * 1000; // ms
+
+      const progress = ((lineCount / ESTIMATED_TOTAL_ENTRIES) * 100).toFixed(1);
+      const elapsedStr = formatTime(elapsed);
+      const remainingStr = formatTime(estimatedRemaining);
+      const rateStr = Math.round(rate).toLocaleString();
+
+      process.stdout.write(
+        `\r${lineCount.toLocaleString()} entries (${progress}%) | ` +
+        `${elapsedStr} elapsed | ~${remainingStr} remaining | ${rateStr} entries/sec`
+      );
     }
 
     try {
@@ -113,8 +143,12 @@ async function exploreData(searchWord = null, filterLangs = []) {
     }
   }
 
+  const totalElapsed = Date.now() - startTime;
+
   console.log('\n\n=== Summary ===');
   console.log(`Total entries processed: ${lineCount.toLocaleString()}`);
+  console.log(`Time elapsed: ${formatTime(totalElapsed)}`);
+  console.log(`Average rate: ${Math.round(lineCount / (totalElapsed / 1000)).toLocaleString()} entries/sec`);
   console.log(`English words: ${englishWords.toLocaleString()}`);
   console.log(`Words with etymology: ${wordsWithEtymology.toLocaleString()}`);
 
