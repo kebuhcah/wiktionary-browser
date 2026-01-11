@@ -43,7 +43,7 @@ function App() {
       <div className="app-main">
         <div className="graph-section">
           <EtymologyGraph
-            initialWordId="run_en"
+            initialWordId="latin_curro"
             onNodeSelect={handleNodeSelect}
             searchWordId={searchWordId}
           />

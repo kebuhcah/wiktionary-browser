@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getAllWords } from '../data/mockEtymologyData';
+import { getAllWords } from '../data/currereEtymologyData';
 import { EtymologyWord } from '../types/etymology';
 import './SearchBar.css';
 

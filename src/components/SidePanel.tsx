@@ -1,4 +1,4 @@
-import { getWordById, getParentWords } from '../data/mockEtymologyData';
+import { getWordById, getParentWords } from '../data/currereEtymologyData';
 import { getLanguageColor } from '../utils/languageColors';
 import './SidePanel.css';
 

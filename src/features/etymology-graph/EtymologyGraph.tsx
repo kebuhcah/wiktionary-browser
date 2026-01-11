@@ -15,7 +15,7 @@ import 'reactflow/dist/style.css';
 import WordNode from '../../components/nodes/WordNode';
 import { useGraphState } from './useGraphState';
 import { useGraphLayout } from './useGraphLayout';
-import { mockEtymologyData } from '../../data/mockEtymologyData';
+import { currereEtymologyData } from '../../data/currereEtymologyData';
 import { updateEdgeHandles } from '../../utils/edgeHelpers';
 import './EtymologyGraph.css';
 
@@ -41,7 +41,7 @@ function EtymologyGraphInner({ initialWordId, onNodeSelect, searchWordId }: Etym
     focusOnWord,
     markNodeAsHavingParents
   } = useGraphState({
-    etymologyData: mockEtymologyData,
+    etymologyData: currereEtymologyData,
     initialWordId
   });
 

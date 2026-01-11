@@ -27,6 +27,5 @@ dist-ssr
 tsconfig.tsbuildinfo
 
 # Data files
-data/
 *.jsonl
 *.jsonl.gz

@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Node, Edge } from 'reactflow';
 import { EtymologyData } from '../../types/etymology';
 import { convertWordsToNodes, convertRelationshipsToEdges } from '../../utils/graphUtils';
-import { getParentWords } from '../../data/mockEtymologyData';
+import { getRelatedWords, getParentWords } from '../../data/currereEtymologyData';
 
 interface UseGraphStateProps {
   etymologyData: EtymologyData;
@@ -40,14 +40,24 @@ export function useGraphState({ etymologyData, initialWordId }: UseGraphStatePro
         return prev;
       }
 
-      const parentData = getParentWords(nodeId);
+      // Get both parents (etymology sources) and children (words derived from this)
+      const relatedData = getRelatedWords(nodeId);
+      const parentData = relatedData.parents;
+      const childData = relatedData.children;
 
-      if (parentData.length === 0) {
+      if (parentData.length === 0 && childData.length === 0) {
         return prev;
       }
 
-      const newWords = parentData.map(p => p.word);
-      const newRelationships = parentData.map(p => p.relationship);
+      // Combine all related words and relationships
+      const newWords = [
+        ...parentData.map(p => p.word),
+        ...childData.map(c => c.word)
+      ];
+      const newRelationships = [
+        ...parentData.map(p => p.relationship),
+        ...childData.map(c => c.relationship)
+      ];
 
       setNodes(currentNodes => {
         const existingNodeIds = new Set(currentNodes.map(n => n.id));
@@ -120,6 +130,16 @@ export function useGraphState({ etymologyData, initialWordId }: UseGraphStatePro
       })
     );
   }, [expandedNodeIds]);
+
+  // Automatically expand initial node to show connections
+  useEffect(() => {
+    if (initialWordId && !expandedNodeIds.has(initialWordId)) {
+      // Small delay to let the initial render complete
+      setTimeout(() => {
+        expandNode(initialWordId);
+      }, 100);
+    }
+  }, [initialWordId, expandNode, expandedNodeIds]);
 
   return {
     nodes,
