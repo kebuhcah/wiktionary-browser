@@ -23,10 +23,19 @@ Explore the Wiktionary data and search for specific words.
 # Get summary statistics and see examples
 node scripts/explore-data.js
 
-# Search for a specific word
+# Search for a specific word (all languages - slow)
 node scripts/explore-data.js run
 node scripts/explore-data.js philosophy
 node scripts/explore-data.js algorithm
+
+# Search for a specific word in specific language(s) (fast - exits early)
+node scripts/explore-data.js correr Spanish
+node scripts/explore-data.js run English
+node scripts/explore-data.js bonjour French English
+node scripts/explore-data.js run en de fr  # Using language codes
+
+# Language filters are case-insensitive
+node scripts/explore-data.js correr spanish SPANISH es
 ```
 
 **Output:**

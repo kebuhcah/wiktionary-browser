@@ -11,8 +11,11 @@ import zlib from 'zlib';
 
 const DATA_FILE = './data/raw-wiktextract-data.jsonl.gz';
 
-async function exploreData(searchWord = null) {
+async function exploreData(searchWord = null, filterLangs = []) {
   console.log('Opening data file...\n');
+  if (searchWord && filterLangs.length > 0) {
+    console.log(`Filtering for languages: ${filterLangs.join(', ')}\n`);
+  }
 
   const readStream = fs.createReadStream(DATA_FILE);
   const gunzip = zlib.createGunzip();
@@ -49,18 +52,39 @@ async function exploreData(searchWord = null) {
 
       // If searching for specific word, collect all language matches
       if (searchWord && entry.word === searchWord) {
-        foundWords.push({
-          lang: entry.lang,
-          pos: entry.pos,
-          etymology_text: entry.etymology_text,
-          etymology_templates: entry.etymology_templates,
-          senses: entry.senses?.slice(0, 2), // Just first 2 senses
-          categories: entry.categories?.slice(0, 5)
-        });
+        // If language filters provided, check if entry matches (case-insensitive)
+        const matchesFilter = filterLangs.length === 0 ||
+                             filterLangs.some(filter =>
+                               entry.lang?.toLowerCase() === filter.toLowerCase() ||
+                               entry.lang_code?.toLowerCase() === filter.toLowerCase()
+                             );
 
-        // Stop after finding 10 different language entries
-        if (foundWords.length >= 10) {
-          break;
+        if (matchesFilter) {
+          foundWords.push({
+            lang: entry.lang,
+            pos: entry.pos,
+            etymology_text: entry.etymology_text,
+            etymology_templates: entry.etymology_templates,
+            senses: entry.senses?.slice(0, 2), // Just first 2 senses
+            categories: entry.categories?.slice(0, 5)
+          });
+
+          // If we have language filters, exit early once we find all requested languages
+          if (filterLangs.length > 0) {
+            const allFound = filterLangs.every(filter =>
+              foundWords.some(w =>
+                w.lang?.toLowerCase() === filter.toLowerCase()
+              )
+            );
+            if (allFound) {
+              break;
+            }
+          }
+
+          // Stop after finding 10 different language entries (when no filter)
+          if (filterLangs.length === 0 && foundWords.length >= 10) {
+            break;
+          }
         }
       }
 
@@ -144,12 +168,17 @@ async function exploreData(searchWord = null) {
   }
 }
 
-// Get word from command line
+// Get word and optional language filters from command line
 const searchWord = process.argv[2];
+const filterLangs = process.argv.slice(3); // All arguments after the word
 
 if (searchWord) {
-  console.log(`Searching for: ${searchWord}\n`);
-  exploreData(searchWord).catch(console.error);
+  if (filterLangs.length > 0) {
+    console.log(`Searching for: ${searchWord} (languages: ${filterLangs.join(', ')})\n`);
+  } else {
+    console.log(`Searching for: ${searchWord}\n`);
+  }
+  exploreData(searchWord, filterLangs).catch(console.error);
 } else {
   console.log('Exploring data (processing first 500k entries)...\n');
   exploreData().catch(console.error);
