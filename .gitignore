@@ -29,3 +29,7 @@ tsconfig.tsbuildinfo
 # Data files
 *.jsonl
 *.jsonl.gz
+*.db
+*.db-shm
+*.db-wal
+import-checkpoint.json

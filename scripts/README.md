@@ -13,7 +13,61 @@ The data is downloaded from: https://kaikki.org/dictionary/rawdata.html
 
 ## Available Scripts
 
-### explore-data.js
+### Method 1: SQLite Database (RECOMMENDED - Fast)
+
+For fast queries and complex searches, import the data into SQLite first.
+
+#### import-to-sqlite.js
+
+Import Wiktionary data into SQLite database for fast querying.
+
+**Setup (one-time, ~1-2 hours):**
+
+```bash
+# Import all data (creates ~25GB database)
+node scripts/import-to-sqlite.js
+
+# Resume if interrupted
+node scripts/import-to-sqlite.js --resume
+```
+
+**Features:**
+- Progress tracking with checkpoints
+- Resume capability if interrupted
+- Creates optimized indexes for fast queries
+- ~60,000 entries/sec import speed
+
+#### query-sqlite.js
+
+Query the SQLite database for instant results.
+
+**Usage:**
+
+```bash
+# Search all languages (instant)
+node scripts/query-sqlite.js correr
+
+# Search specific language(s) (instant)
+node scripts/query-sqlite.js correr Spanish
+node scripts/query-sqlite.js run English German French
+
+# Database statistics
+node scripts/query-sqlite.js --stats
+```
+
+**Performance:**
+- Query time: <10ms (vs 1-30 seconds with JSONL)
+- Supports complex queries
+- Case-insensitive language matching
+- Limit 10 results per query
+
+---
+
+### Method 2: Direct JSONL Access (Slower, No Setup)
+
+For quick exploration without importing to database.
+
+#### explore-data.js
 
 Explore the Wiktionary data and search for specific words.
 
