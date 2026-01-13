@@ -28,7 +28,7 @@ export default function ApiDemo() {
 
   // Search as user types
   useEffect(() => {
-    if (searchQuery.length < 2) {
+    if (searchQuery.length < 3) {
       setSearchResults([]);
       return;
     }
@@ -36,7 +36,7 @@ export default function ApiDemo() {
     const debounceTimeout = setTimeout(async () => {
       try {
         setError(null);
-        const results = await searchWords(searchQuery, 10);
+        const results = await searchWords(searchQuery, 8);
         setSearchResults(results);
       } catch (err) {
         setError('Search failed');

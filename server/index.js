@@ -59,9 +59,9 @@ app.get('/api/stats', (req, res) => {
 // Search for words (autocomplete)
 app.get('/api/search', (req, res) => {
   try {
-    const { q, limit = 20 } = req.query;
+    const { q, limit = 10 } = req.query;
 
-    if (!q || q.length < 2) {
+    if (!q || q.length < 3) {
       return res.json([]);
     }
 
