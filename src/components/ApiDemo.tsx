@@ -19,6 +19,7 @@ export default function ApiDemo() {
   const [selectedWord, setSelectedWord] = useState<WordEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // Check API availability on mount
   useEffect(() => {
@@ -90,9 +91,14 @@ export default function ApiDemo() {
           placeholder="Search for a word..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => {
+            // Delay hiding to allow click events on results to fire first
+            setTimeout(() => setIsSearchFocused(false), 200);
+          }}
         />
 
-        {searchResults.length > 0 && (
+        {searchResults.length > 0 && isSearchFocused && (
           <div className="search-results">
             {searchResults.map((result, i) => (
               <div
