@@ -65,16 +65,24 @@ app.get('/api/search', (req, res) => {
       return res.json([]);
     }
 
+    // Optimized query: Show all language variants for each word
+    // GROUP BY word+language to show each language separately
+    // This way "correr" shows Spanish, Galician, Portuguese, etc.
     const results = db.prepare(`
-      SELECT DISTINCT word, language, lang_code, pos
+      SELECT word,
+             language,
+             MIN(lang_code) as lang_code,
+             MIN(pos) as pos
       FROM words
-      WHERE word LIKE ?
+      WHERE word LIKE ? || '%'
+      GROUP BY word, language
       ORDER BY
-        CASE WHEN word = ? THEN 0 ELSE 1 END,
+        word = ? DESC,
         LENGTH(word),
-        word
+        word,
+        language
       LIMIT ?
-    `).all(`${q}%`, q, parseInt(limit));
+    `).all(q, q, parseInt(limit));
 
     res.json(results);
   } catch (error) {

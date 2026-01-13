@@ -41,7 +41,7 @@ export default function ApiDemo() {
         setError('Search failed');
         setSearchResults([]);
       }
-    }, 300);
+    }, 150); // Reduced from 300ms to 150ms for snappier feel
 
     return () => clearTimeout(debounceTimeout);
   }, [searchQuery]);
