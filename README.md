@@ -11,13 +11,29 @@ A React-based interactive graph visualization tool for exploring etymological co
 - **Language Color Coding**: Visual encoding by language family
 - **Cross-Linguistic Connections**: Discover how words from different languages share common roots
 
-## Demo Data
+## Data Modes
 
-The prototype includes sample etymologies for:
-- "run" (English) → Old English → Proto-Germanic → PIE
-- "correr" (Spanish) → Latin → PIE
-- "algorithm" (English) → Medieval Latin → Arabic
-- "brother" family showing cognates across English, Latin, and Sanskrit
+### 1. Static Data Mode (Default)
+The app includes curated etymology data for the Latin "currere" (to run) family:
+- Proto-Indo-European *ḱers- → Proto-Italic *korzō → Latin currō
+- Romance languages: Spanish correr, French courir, Italian correre
+- English borrowings: course, current, cursor, occur, recur, excursion
+- 19 words, 18 relationships across 6 languages
+
+### 2. API Mode (Full Wiktionary Database)
+For access to 10.4M+ entries across 2,878 languages:
+
+1. **Import data to SQLite** (one-time, ~1-2 hours):
+   ```bash
+   node scripts/import-to-sqlite.js
+   ```
+
+2. **Start API server + frontend**:
+   ```bash
+   npm run dev:all
+   ```
+
+See [scripts/README.md](scripts/README.md) and [server/README.md](server/README.md) for details.
 
 ## Getting Started
 
