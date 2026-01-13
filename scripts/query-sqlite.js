@@ -22,7 +22,8 @@ const DB_FILE = './data/wiktionary.db';
 
 function formatResult(row, index, total) {
   console.log(`\n${'='.repeat(70)}`);
-  console.log(`${index}. ${row.word} [${row.language}] (${row.pos || 'unknown'})`);
+  const etymologyLabel = row.etymology_index > 0 ? ` - Etymology ${row.etymology_index + 1}` : '';
+  console.log(`${index}. ${row.word} [${row.language}] (${row.pos || 'unknown'})${etymologyLabel}`);
   console.log(`${'='.repeat(70)}`);
 
   if (row.etymology_text) {

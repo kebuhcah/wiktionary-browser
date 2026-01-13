@@ -56,21 +56,22 @@ async function importData(resume = false) {
       language TEXT NOT NULL,
       lang_code TEXT,
       pos TEXT,
+      etymology_index INTEGER NOT NULL DEFAULT 0,
       etymology_text TEXT,
       etymology_templates TEXT,  -- JSON array
       categories TEXT,           -- JSON array
       senses TEXT,               -- JSON array
       full_data TEXT,            -- Complete JSON for flexibility
-      PRIMARY KEY (word, language, pos)
+      PRIMARY KEY (word, language, pos, etymology_index)
     )
   `);
 
   // Prepare insert statement
   const insert = db.prepare(`
-    INSERT OR REPLACE INTO words (
-      word, language, lang_code, pos, etymology_text,
+    INSERT INTO words (
+      word, language, lang_code, pos, etymology_index, etymology_text,
       etymology_templates, categories, senses, full_data
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const startTime = Date.now();
@@ -111,6 +112,9 @@ async function importData(resume = false) {
   let batch = [];
   let skippedToResume = false;
 
+  // Track etymology index for each (word, language, pos) combination
+  const etymologyIndexMap = new Map();
+
   // Start transaction for batch inserts
   const insertMany = db.transaction((entries) => {
     for (const entry of entries) {
@@ -137,11 +141,19 @@ async function importData(resume = false) {
     try {
       const entry = JSON.parse(line);
 
+      // Generate unique key for (word, language, pos)
+      const key = `${entry.word || ''}|${entry.lang || ''}|${entry.pos || ''}`;
+
+      // Get and increment etymology index for this combination
+      const etymologyIndex = etymologyIndexMap.get(key) || 0;
+      etymologyIndexMap.set(key, etymologyIndex + 1);
+
       batch.push([
         entry.word || '',
         entry.lang || '',
         entry.lang_code || '',
         entry.pos || '',
+        etymologyIndex,
         entry.etymology_text || null,
         entry.etymology_templates ? JSON.stringify(entry.etymology_templates) : null,
         entry.categories ? JSON.stringify(entry.categories) : null,
