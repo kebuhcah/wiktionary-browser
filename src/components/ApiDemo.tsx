@@ -130,7 +130,7 @@ export default function ApiDemo() {
               {entry.etymology_text && (
                 <div className="etymology">
                   <strong>Etymology:</strong>
-                  <p>{entry.etymology_text.substring(0, 300)}...</p>
+                  <p>{entry.etymology_text.substring(0, 1000)}{entry.etymology_text.length > 1000 ? "..." : ""}</p>
                 </div>
               )}
               {entry.senses && entry.senses.length > 0 && (
