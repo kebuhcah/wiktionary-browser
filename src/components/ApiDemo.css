@@ -161,11 +161,13 @@
 }
 
 .word-entry .etymology,
+.word-entry .etymology-relations,
 .word-entry .definitions {
   margin-top: 16px;
 }
 
 .word-entry .etymology strong,
+.word-entry .etymology-relations > strong,
 .word-entry .definitions strong {
   display: block;
   margin-bottom: 8px;
@@ -176,6 +178,30 @@
   color: #4b5563;
   line-height: 1.6;
   margin: 0;
+}
+
+.word-entry .etymology-relations ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.word-entry .etymology-relations li {
+  margin-bottom: 6px;
+}
+
+.word-entry .etymology-relations em {
+  color: #2563eb;
+  font-style: italic;
+}
+
+.word-entry .etymology-relations li strong {
+  display: inline;
+  color: #7c3aed;
+  font-weight: 600;
+  cursor: help;
+  border-bottom: 1px dotted #7c3aed;
 }
 
 .word-entry .definitions ol {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { checkApiHealth, searchWords, getWordDetails, WordSearchResult, WordEntry } from '../api/etymologyApi';
+import { getLanguageName } from '../utils/languageNames';
 import './ApiDemo.css';
 
 /**
@@ -131,6 +132,42 @@ export default function ApiDemo() {
                 <div className="etymology">
                   <strong>Etymology:</strong>
                   <p>{entry.etymology_text.substring(0, 1000)}{entry.etymology_text.length > 1000 ? "..." : ""}</p>
+                </div>
+              )}
+              {entry.etymology_templates && entry.etymology_templates.length > 0 && (
+                <div className="etymology-relations">
+                  <strong>Related words:</strong>
+                  <ul>
+                    {entry.etymology_templates
+                      .filter((t: any) => ['inh', 'der', 'bor', 'cog', 'inherited', 'derived', 'borrowed', 'cognate'].includes(t.name))
+                      .slice(0, 10)
+                      .map((template: any, j: number) => {
+                        const relationType = {
+                          'inh': 'Inherited from',
+                          'inherited': 'Inherited from',
+                          'der': 'Derived from',
+                          'derived': 'Derived from',
+                          'bor': 'Borrowed from',
+                          'borrowed': 'Borrowed from',
+                          'cog': 'Cognate with',
+                          'cognate': 'Cognate with'
+                        }[template.name] || template.name;
+
+                        const langCode = template.args?.['2'] || template.args?.lang || '';
+                        const word = template.args?.['3'] || template.args?.term || '';
+
+                        if (!word) return null;
+
+                        const langName = getLanguageName(langCode);
+
+                        return (
+                          <li key={j}>
+                            {relationType} <strong title={langCode}>{langName}</strong> <em>{word}</em>
+                          </li>
+                        );
+                      })
+                      .filter(Boolean)}
+                  </ul>
                 </div>
               )}
               {entry.senses && entry.senses.length > 0 && (
