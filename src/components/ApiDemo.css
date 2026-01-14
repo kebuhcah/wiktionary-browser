@@ -134,6 +134,28 @@
   margin-top: 20px;
 }
 
+.back-button {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 16px;
+  display: inline-block;
+}
+
+.back-button:hover {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.back-button:active {
+  background-color: #d1d5db;
+}
+
 .word-entry {
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
@@ -194,6 +216,16 @@
 .word-entry .etymology-relations em {
   color: #2563eb;
   font-style: italic;
+}
+
+.word-entry .etymology-relations em.clickable-word {
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.word-entry .etymology-relations em.clickable-word:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
 }
 
 .word-entry .etymology-relations li strong {

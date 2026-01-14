@@ -21,6 +21,7 @@ export default function ApiDemo() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [history, setHistory] = useState<Array<{word: string, language: string, entries: WordEntry[]}>>([]);
 
   // Check API availability on mount
   useEffect(() => {
@@ -48,17 +49,44 @@ export default function ApiDemo() {
     return () => clearTimeout(debounceTimeout);
   }, [searchQuery]);
 
-  const handleWordClick = async (word: string, language: string) => {
+  const handleWordClick = async (word: string, language: string, clearHistory = false) => {
     setLoading(true);
     setError(null);
     try {
       const details = await getWordDetails(word, [language]);
+
+      if (details.length === 0) {
+        setError(`Word "${word}" not found in ${language}`);
+        setLoading(false);
+        return;
+      }
+
+      // Save current word to history before navigating (unless clearing history)
+      if (!clearHistory && selectedWord.length > 0) {
+        setHistory(prev => [...prev, {
+          word: selectedWord[0].word,
+          language: selectedWord[0].language,
+          entries: selectedWord
+        }]);
+      } else if (clearHistory) {
+        setHistory([]);
+      }
+
       setSelectedWord(details);
     } catch (err) {
       setError('Failed to load word details');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    if (history.length === 0) return;
+
+    const previous = history[history.length - 1];
+    setHistory(prev => prev.slice(0, -1));
+    setSelectedWord(previous.entries);
+    setError(null);
   };
 
   if (!isApiAvailable) {
@@ -105,7 +133,7 @@ export default function ApiDemo() {
               <div
                 key={`${result.word}-${result.language}-${i}`}
                 className="search-result-item"
-                onClick={() => handleWordClick(result.word, result.language)}
+                onClick={() => handleWordClick(result.word, result.language, true)}
               >
                 <span className="word">{result.word}</span>
                 <span className="language">{result.language}</span>
@@ -122,6 +150,11 @@ export default function ApiDemo() {
 
       {selectedWord.length > 0 && (
         <div className="word-details">
+          {history.length > 0 && (
+            <button className="back-button" onClick={handleBack}>
+              ← Back to {history[history.length - 1].word}
+            </button>
+          )}
           {selectedWord.map((entry, i) => (
             <div key={i} className="word-entry">
               <h4>
@@ -162,7 +195,14 @@ export default function ApiDemo() {
 
                         return (
                           <li key={j}>
-                            {relationType} <strong title={langCode}>{langName}</strong> <em>{word}</em>
+                            {relationType} <strong title={langCode}>{langName}</strong>{' '}
+                            <em
+                              className="clickable-word"
+                              onClick={() => handleWordClick(word, langCode)}
+                              title={`Click to view ${word}`}
+                            >
+                              {word}
+                            </em>
                           </li>
                         );
                       })
