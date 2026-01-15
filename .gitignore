@@ -33,3 +33,9 @@ tsconfig.tsbuildinfo
 *.db-shm
 *.db-wal
 import-checkpoint.json
+
+# Python
+venv-notebook/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
