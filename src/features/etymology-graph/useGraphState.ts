@@ -1,8 +1,40 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Node, Edge } from 'reactflow';
 import { EtymologyData } from '../../types/etymology';
 import { convertWordsToNodes, convertRelationshipsToEdges } from '../../utils/graphUtils';
 import { getRelatedWords, getParentWords } from '../../data/currereEtymologyData';
+
+export type RelationshipType = 'inherited_from' | 'derived_from' | 'borrowed_from' | 'cognate_with';
+
+export interface GraphNode {
+  id: string;
+  x: number;
+  y: number;
+  fx?: number | null;  // Fixed x position (for dragging)
+  fy?: number | null;  // Fixed y position (for dragging)
+  data: {
+    word: string;
+    language: string;
+    languageDisplay: string;
+    definition?: string;
+    partOfSpeech?: string;
+    color: string;
+    hasParents?: boolean;
+    isExpanded?: boolean;
+  };
+}
+
+export interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  type: RelationshipType;
+  animated?: boolean;
+  style?: {
+    strokeWidth: number;
+    stroke: string;
+    strokeDasharray?: string;
+  };
+}
 
 interface UseGraphStateProps {
   etymologyData: EtymologyData;
@@ -19,7 +51,7 @@ export function useGraphState({ etymologyData, initialWordId }: UseGraphStatePro
       if (initialWord) {
         return {
           nodes: convertWordsToNodes([initialWord]),
-          edges: [] as Edge[]
+          edges: [] as GraphEdge[]
         };
       }
     }
@@ -27,12 +59,12 @@ export function useGraphState({ etymologyData, initialWordId }: UseGraphStatePro
     const startWords = etymologyData.words.slice(0, 3);
     return {
       nodes: convertWordsToNodes(startWords),
-      edges: [] as Edge[]
+      edges: [] as GraphEdge[]
     };
   }, [etymologyData, initialWordId]);
 
-  const [nodes, setNodes] = useState<Node[]>(getInitialGraph().nodes);
-  const [edges, setEdges] = useState<Edge[]>(getInitialGraph().edges);
+  const [nodes, setNodes] = useState<GraphNode[]>(getInitialGraph().nodes);
+  const [edges, setEdges] = useState<GraphEdge[]>(getInitialGraph().edges);
 
   const expandNode = useCallback((nodeId: string) => {
     setExpandedNodeIds(prev => {
@@ -104,7 +136,7 @@ export function useGraphState({ etymologyData, initialWordId }: UseGraphStatePro
     setSelectedNodeId(wordId);
   }, [etymologyData]);
 
-  const updateNodeData = useCallback((nodeId: string, updates: Partial<Node['data']>) => {
+  const updateNodeData = useCallback((nodeId: string, updates: Partial<GraphNode['data']>) => {
     setNodes(prev =>
       prev.map(node =>
         node.id === nodeId

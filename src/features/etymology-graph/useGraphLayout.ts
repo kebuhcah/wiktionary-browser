@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { Node, Edge, useReactFlow } from 'reactflow';
 import * as d3 from 'd3-force';
+import { GraphNode, GraphEdge } from './useGraphState';
 
 interface SimulationNode extends d3.SimulationNodeDatum {
   id: string;
@@ -15,8 +15,12 @@ interface SimulationLink extends d3.SimulationLinkDatum<SimulationNode> {
   target: string | SimulationNode;
 }
 
-export function useGraphLayout(nodes: Node[], edges: Edge[], enabled: boolean = true) {
-  const { setNodes } = useReactFlow();
+export function useGraphLayout(
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  setNodes: React.Dispatch<React.SetStateAction<GraphNode[]>>,
+  enabled: boolean = true
+) {
   const simulationRef = useRef<d3.Simulation<SimulationNode, SimulationLink> | null>(null);
   const simNodesRef = useRef<SimulationNode[]>([]);
 
@@ -27,10 +31,10 @@ export function useGraphLayout(nodes: Node[], edges: Edge[], enabled: boolean = 
 
     const simNodes: SimulationNode[] = nodes.map(node => ({
       id: node.id,
-      x: node.position.x || 0,
-      y: node.position.y || 0,
-      fx: (node as any).dragging ? node.position.x : null,
-      fy: (node as any).dragging ? node.position.y : null
+      x: node.x || 0,
+      y: node.y || 0,
+      fx: null,
+      fy: null
     }));
 
     simNodesRef.current = simNodes;
@@ -62,10 +66,8 @@ export function useGraphLayout(nodes: Node[], edges: Edge[], enabled: boolean = 
           if (simNode && simNode.x !== undefined && simNode.y !== undefined) {
             return {
               ...node,
-              position: {
-                x: simNode.x,
-                y: simNode.y
-              }
+              x: simNode.x,
+              y: simNode.y
             };
           }
           return node;

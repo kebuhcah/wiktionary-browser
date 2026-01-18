@@ -1,0 +1,62 @@
+.etymology-graph-container {
+  width: 100%;
+  height: 100%;
+  background-color: #f8fafc;
+  position: relative;
+  overflow: hidden;
+}
+
+.etymology-graph-svg {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.etymology-graph-svg:active {
+  cursor: grabbing;
+}
+
+/* Nodes */
+.node {
+  cursor: pointer;
+}
+
+.node circle:first-child {
+  transition: stroke 0.2s;
+}
+
+.node:hover circle:first-child {
+  stroke: #94a3b8;
+  stroke-width: 2;
+}
+
+.word-label {
+  font-size: 14px;
+  font-weight: 600;
+  fill: #1e293b;
+  pointer-events: none;
+  user-select: none;
+}
+
+.language-label {
+  font-size: 10px;
+  fill: #64748b;
+  pointer-events: none;
+  user-select: none;
+}
+
+.expand-indicator {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Edges */
+.edge {
+  pointer-events: none;
+  transition: stroke 0.2s;
+}
+
+/* Background */
+.background-grid {
+  pointer-events: all;
+}

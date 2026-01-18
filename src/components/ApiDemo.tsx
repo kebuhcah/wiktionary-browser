@@ -175,7 +175,7 @@ export default function ApiDemo() {
                       .filter((t: any) => ['inh', 'der', 'bor', 'cog', 'inherited', 'derived', 'borrowed', 'cognate'].includes(t.name))
                       .slice(0, 10)
                       .map((template: any, j: number) => {
-                        const relationType = {
+                        const relationTypeMap: Record<string, string> = {
                           'inh': 'Inherited from',
                           'inherited': 'Inherited from',
                           'der': 'Derived from',
@@ -184,7 +184,8 @@ export default function ApiDemo() {
                           'borrowed': 'Borrowed from',
                           'cog': 'Cognate with',
                           'cognate': 'Cognate with'
-                        }[template.name] || template.name;
+                        };
+                        const relationType = relationTypeMap[template.name] || template.name;
 
                         const langCode = template.args?.['2'] || template.args?.lang || '';
                         const word = template.args?.['3'] || template.args?.term || '';

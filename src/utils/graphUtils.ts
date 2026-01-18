@@ -1,12 +1,12 @@
-import { Node, Edge, MarkerType } from 'reactflow';
 import { EtymologyWord, EtymologyRelationship } from '../types/etymology';
 import { getLanguageColor } from './languageColors';
+import { GraphNode, GraphEdge } from '../features/etymology-graph/useGraphState';
 
-export function convertWordsToNodes(words: EtymologyWord[]): Node[] {
+export function convertWordsToNodes(words: EtymologyWord[]): GraphNode[] {
   return words.map(word => ({
     id: word.id,
-    type: 'wordNode',
-    position: { x: 0, y: 0 }, // Will be set by layout
+    x: 0, // Will be set by force simulation
+    y: 0,
     data: {
       ...word,
       color: getLanguageColor(word.language)
@@ -16,29 +16,19 @@ export function convertWordsToNodes(words: EtymologyWord[]): Node[] {
 
 export function convertRelationshipsToEdges(
   relationships: EtymologyRelationship[]
-): Edge[] {
+): GraphEdge[] {
   return relationships.map(rel => ({
     id: rel.id,
     // Reverse direction: arrows point from parent (target) → child (source)
     // This shows etymology flow from ancient → modern
     source: rel.target,  // Etymology source (parent word)
     target: rel.source,  // Derived word (child)
-    type: rel.type === 'cognate_with' ? 'default' : 'default',
+    type: rel.type as GraphEdge['type'],
     animated: rel.type === 'borrowed_from',
     style: {
       strokeWidth: 2,
       stroke: rel.type === 'borrowed_from' ? '#94a3b8' : '#64748b',
       strokeDasharray: rel.type === 'borrowed_from' ? '5,5' : undefined
-    },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 20,
-      height: 20,
-      color: '#64748b'
-    },
-    data: {
-      relationshipType: rel.type,
-      notes: rel.notes
     }
   }));
 }
