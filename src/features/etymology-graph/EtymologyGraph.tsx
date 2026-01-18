@@ -40,7 +40,7 @@ export default function EtymologyGraph({ initialWordId, onNodeSelect, searchWord
     markNodeAsHavingParents
   } = graphState;
 
-  const { simNodesRef } = useGraphLayout(nodes, edges, setNodes, true);
+  const { simNodesRef, simulationRef } = useGraphLayout(nodes, edges, setNodes, true);
 
   useEffect(() => {
     markNodeAsHavingParents();
@@ -90,6 +90,7 @@ export default function EtymologyGraph({ initialWordId, onNodeSelect, searchWord
           onNodeSelect={handleNodeSelect}
           onNodeExpand={handleNodeExpand}
           simulationNodesRef={simNodesRef as React.MutableRefObject<GraphNode[]>}
+          simulationRef={simulationRef}
         />
       </div>
       {initialWord ? (

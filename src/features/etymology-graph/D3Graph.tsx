@@ -16,6 +16,7 @@ export interface D3GraphProps {
   onNodeSelect?: (nodeId: string) => void;
   onNodeExpand?: (nodeId: string) => void;
   simulationNodesRef: React.MutableRefObject<GraphNode[]>;
+  simulationRef: React.MutableRefObject<any>;
 }
 
 interface Transform {
@@ -32,7 +33,8 @@ export function D3Graph({
   selectedNodeId,
   onNodeSelect,
   onNodeExpand,
-  simulationNodesRef
+  simulationNodesRef,
+  simulationRef
 }: D3GraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const viewportRef = useRef<SVGGElement>(null);
@@ -60,30 +62,30 @@ export function D3Graph({
         return true;
       })
       .on('zoom', (event) => {
-        if (!isDraggingRef.current) {
-          viewport.attr('transform', event.transform.toString());
-          setCurrentTransform({
-            x: event.transform.x,
-            y: event.transform.y,
-            k: event.transform.k
-          });
-        }
+        viewport.attr('transform', event.transform.toString());
+        setCurrentTransform({
+          x: event.transform.x,
+          y: event.transform.y,
+          k: event.transform.k
+        });
       });
 
     svg.call(zoom);
     zoomBehaviorRef.current = zoom;
 
-    // Setup drag behavior
+    // Setup drag behavior - subject provides correct coordinates in viewport space
     const drag = d3Drag<SVGGElement, GraphNode>()
-      .filter((event) => {
-        // Only allow drag on left mouse button
-        return event.button === 0;
+      .subject((event, d) => {
+        return { x: d.x, y: d.y };
       })
       .on('start', (event, d) => {
         isDraggingRef.current = true;
-        // Completely disable zoom behavior during drag
-        if (zoomBehaviorRef.current) {
-          svg.on('.zoom', null);
+        // Prevent event from bubbling to zoom
+        event.sourceEvent.stopPropagation();
+
+        // Restart simulation to make it active for drag updates
+        if (simulationRef.current) {
+          simulationRef.current.alphaTarget(0.3).restart();
         }
 
         const simNode = simulationNodesRef.current.find(n => n.id === d.id);
@@ -93,24 +95,33 @@ export function D3Graph({
         }
       })
       .on('drag', (event, d) => {
+        // Prevent event from bubbling to zoom
+        event.sourceEvent.stopPropagation();
+
         const simNode = simulationNodesRef.current.find(n => n.id === d.id);
         if (simNode) {
+          // Update fixed position to current drag coordinates
           simNode.fx = event.x;
           simNode.fy = event.y;
-          // Update visual position immediately
-          d3.select(event.sourceEvent.target.parentNode as SVGGElement)
-            .attr('transform', `translate(${event.x},${event.y})`);
+
+          // Also update the actual position so render sees it immediately
+          simNode.x = event.x;
+          simNode.y = event.y;
         }
       })
       .on('end', (event, d) => {
-        // Re-enable zoom behavior after drag
-        if (zoomBehaviorRef.current) {
-          svg.call(zoomBehaviorRef.current);
+        // Prevent event from bubbling to zoom
+        event.sourceEvent.stopPropagation();
+
+        // Let simulation cool down again
+        if (simulationRef.current) {
+          simulationRef.current.alphaTarget(0);
         }
 
         isDraggingRef.current = false;
         const simNode = simulationNodesRef.current.find(n => n.id === d.id);
         if (simNode) {
+          // Unfix the node so it can be dragged again or float freely
           simNode.fx = null;
           simNode.fy = null;
         }
