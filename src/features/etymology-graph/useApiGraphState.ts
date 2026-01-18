@@ -36,7 +36,7 @@ export function useApiGraphState({ initialWord }: UseApiGraphStateProps) {
   });
 
   // Load a word and its relationships
-  const loadWord = useCallback(async (word: string, language: string) => {
+  const loadWord = useCallback(async (word: string, language: string, autoExpand: boolean = true) => {
     setLoading(true);
     setError(null);
 
@@ -121,7 +121,24 @@ export function useApiGraphState({ initialWord }: UseApiGraphStateProps) {
         return [...currentEdges, ...newEdges];
       });
 
-      setExpandedNodeIds(prev => new Set([...prev, nodeId]));
+      setExpandedNodeIds(prev => {
+        const updated = new Set([...prev, nodeId]);
+
+        // Auto-expand parent and child nodes to show all connections
+        if (autoExpand) {
+          const nodesToExpand = [...parentNodes, ...childNodes];
+          for (const node of nodesToExpand) {
+            if (!updated.has(node.id)) {
+              // Load relationships for this node (but don't wait and don't auto-expand further)
+              loadWord(node.data.word, node.data.language, false).catch(() => {
+                // Silently fail if we can't load a node's relationships
+              });
+            }
+          }
+        }
+
+        return updated;
+      });
     } catch (err) {
       setError(`Failed to load etymology for ${word}`);
       console.error('Failed to load etymology:', err);

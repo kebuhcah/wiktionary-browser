@@ -22,12 +22,7 @@
 }
 
 .node circle:first-child {
-  transition: stroke 0.2s;
-}
-
-.node:hover circle:first-child {
-  stroke: #94a3b8;
-  stroke-width: 2;
+  transition: stroke 0.2s, stroke-opacity 0.2s, stroke-width 0.2s;
 }
 
 .word-label {
@@ -43,11 +38,6 @@
   fill: #64748b;
   pointer-events: none;
   user-select: none;
-}
-
-.expand-indicator {
-  pointer-events: none;
-  opacity: 0.7;
 }
 
 /* Edges */

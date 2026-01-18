@@ -47,16 +47,16 @@ export function useGraphLayout(
     const simulation = d3.forceSimulation(simNodes)
       .force('link', d3.forceLink<SimulationNode, SimulationLink>(simLinks)
         .id(d => d.id)
-        .distance(240)      // Increased from 120: more space between connected nodes
-        .strength(0.6)      // Decreased from 0.8: less rigid connections
+        .distance(150)      // Moderate distance between connected nodes
+        .strength(0.7)      // Strong enough to keep connections visible
       )
       .force('charge', d3.forceManyBody()
-        .strength(-300)     // Increased repulsion to push nodes apart
+        .strength(-120)     // Reduced repulsion for tighter grouping
       )
       .force('center', d3.forceCenter(0, 0))
       .force('collide', d3.forceCollide()
-        .radius(120)        // Increased: nodes are 150-200px wide, need ~240px spacing
-        .strength(1.0)      // Maximum strength: strongly prevent overlap
+        .radius(80)         // Prevent overlap with reasonable spacing
+        .strength(0.9)      // Strong collision prevention
       );
 
     simulation.on('tick', () => {

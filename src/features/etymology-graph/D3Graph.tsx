@@ -40,6 +40,7 @@ export function D3Graph({
   const dragBehaviorRef = useRef<any>(null);
   const [svgDimensions, setSvgDimensions] = useState({ width: 0, height: 0 });
   const [currentTransform, setCurrentTransform] = useState<Transform>({ x: 0, y: 0, k: 1 });
+  const isDraggingRef = useRef(false);
 
   // Setup zoom and drag behaviors (runs once)
   useEffect(() => {
@@ -51,13 +52,22 @@ export function D3Graph({
     // Setup zoom behavior
     const zoom = d3Zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 2])
+      .filter((event) => {
+        // Prevent zoom during drag
+        if (isDraggingRef.current) return false;
+        // Prevent zoom on right click
+        if (event.button === 2) return false;
+        return true;
+      })
       .on('zoom', (event) => {
-        viewport.attr('transform', event.transform.toString());
-        setCurrentTransform({
-          x: event.transform.x,
-          y: event.transform.y,
-          k: event.transform.k
-        });
+        if (!isDraggingRef.current) {
+          viewport.attr('transform', event.transform.toString());
+          setCurrentTransform({
+            x: event.transform.x,
+            y: event.transform.y,
+            k: event.transform.k
+          });
+        }
       });
 
     svg.call(zoom);
@@ -65,7 +75,17 @@ export function D3Graph({
 
     // Setup drag behavior
     const drag = d3Drag<SVGGElement, GraphNode>()
-      .on('start', (_event, d) => {
+      .filter((event) => {
+        // Only allow drag on left mouse button
+        return event.button === 0;
+      })
+      .on('start', (event, d) => {
+        isDraggingRef.current = true;
+        // Completely disable zoom behavior during drag
+        if (zoomBehaviorRef.current) {
+          svg.on('.zoom', null);
+        }
+
         const simNode = simulationNodesRef.current.find(n => n.id === d.id);
         if (simNode) {
           simNode.fx = simNode.x;
@@ -82,7 +102,13 @@ export function D3Graph({
             .attr('transform', `translate(${event.x},${event.y})`);
         }
       })
-      .on('end', (_event, d) => {
+      .on('end', (event, d) => {
+        // Re-enable zoom behavior after drag
+        if (zoomBehaviorRef.current) {
+          svg.call(zoomBehaviorRef.current);
+        }
+
+        isDraggingRef.current = false;
         const simNode = simulationNodesRef.current.find(n => n.id === d.id);
         if (simNode) {
           simNode.fx = null;
@@ -220,14 +246,6 @@ export function D3Graph({
       .attr('y', NODE_RADIUS + 28)
       .attr('text-anchor', 'middle');
 
-    // Add expand indicator (small circle at bottom)
-    nodeEnter
-      .append('circle')
-      .attr('class', 'expand-indicator')
-      .attr('r', 4)
-      .attr('cy', NODE_RADIUS + 12)
-      .attr('fill', '#94a3b8');
-
     // Update all nodes (merge enter + update selections)
     const allNodes = nodeGroups.merge(nodeEnter);
 
@@ -249,8 +267,17 @@ export function D3Graph({
 
     allNodes
       .select('circle:first-child')
-      .attr('stroke', d => (selectedNodeId === d.id ? '#000' : 'none'))
-      .attr('stroke-width', 3);
+      .attr('stroke', d => {
+        if (selectedNodeId === d.id) return '#000';
+        if (d.data.hasParents && !d.data.isExpanded) return d.data.color;
+        return 'none';
+      })
+      .attr('stroke-width', d => (selectedNodeId === d.id ? 3 : 2))
+      .attr('stroke-opacity', d => {
+        if (selectedNodeId === d.id) return 1;
+        if (d.data.hasParents && !d.data.isExpanded) return 0.4;
+        return 1;
+      });
 
     allNodes
       .select('.word-label')
@@ -260,12 +287,36 @@ export function D3Graph({
       .select('.language-label')
       .text(d => d.data.languageDisplay);
 
-    allNodes
-      .select('.expand-indicator')
-      .style('display', d => (d.data.hasParents && !d.data.isExpanded ? 'block' : 'none'));
-
     nodeGroups.exit().remove();
   }, [nodes, edges, selectedNodeId, onNodeSelect, onNodeExpand]);
+
+  // Auto-center view when nodes first load or change significantly
+  useEffect(() => {
+    if (nodes.length > 0 && svgRef.current && zoomBehaviorRef.current) {
+      // Small delay to allow force simulation to position nodes
+      const timer = setTimeout(() => {
+        const bbox = calculateBoundingBox(nodes);
+        const svgWidth = svgRef.current!.clientWidth;
+        const svgHeight = svgRef.current!.clientHeight;
+
+        if (svgWidth === 0 || svgHeight === 0) return;
+
+        const scale = Math.min(svgWidth / bbox.width, svgHeight / bbox.height, 1.5);
+        const translateX = svgWidth / 2 - scale * (bbox.minX + bbox.width / 2);
+        const translateY = svgHeight / 2 - scale * (bbox.minY + bbox.height / 2);
+
+        d3.select(svgRef.current!)
+          .transition()
+          .duration(500)
+          .call(
+            zoomBehaviorRef.current!.transform,
+            zoomIdentity.translate(translateX, translateY).scale(scale)
+          );
+      }, 600); // Wait for simulation to settle
+
+      return () => clearTimeout(timer);
+    }
+  }, [nodes.length]); // Only trigger when node count changes
 
   // Zoom control handlers
   const handleZoomIn = () => {
