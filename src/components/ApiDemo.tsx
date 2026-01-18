@@ -3,6 +3,10 @@ import { checkApiHealth, searchWords, getWordDetails, WordSearchResult, WordEntr
 import { getLanguageName } from '../utils/languageNames';
 import './ApiDemo.css';
 
+interface ApiDemoProps {
+  onViewInGraph?: (word: string, language: string) => void;
+}
+
 /**
  * Demo component showing API integration
  *
@@ -13,7 +17,7 @@ import './ApiDemo.css';
  *
  * To use: Enable API mode by running `npm run dev:all`
  */
-export default function ApiDemo() {
+export default function ApiDemo({ onViewInGraph }: ApiDemoProps) {
   const [isApiAvailable, setIsApiAvailable] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<WordSearchResult[]>([]);
@@ -157,9 +161,27 @@ export default function ApiDemo() {
           )}
           {selectedWord.map((entry, i) => (
             <div key={i} className="word-entry">
-              <h4>
-                {entry.word} <span className="lang">[{entry.language}]</span>
-              </h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h4 style={{ margin: 0 }}>
+                  {entry.word} <span className="lang">[{entry.language}]</span>
+                </h4>
+                {onViewInGraph && (
+                  <button
+                    onClick={() => onViewInGraph(entry.word, entry.language)}
+                    style={{
+                      padding: '6px 12px',
+                      background: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '13px'
+                    }}
+                  >
+                    View in Graph →
+                  </button>
+                )}
+              </div>
               {entry.pos && <p className="pos">Part of speech: {entry.pos}</p>}
               {entry.etymology_text && (
                 <div className="etymology">

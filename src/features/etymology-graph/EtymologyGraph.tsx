@@ -1,18 +1,34 @@
 import { useEffect } from 'react';
 import { useGraphState, GraphNode } from './useGraphState';
+import { useApiGraphState } from './useApiGraphState';
 import { useGraphLayout } from './useGraphLayout';
 import { currereEtymologyData } from '../../data/currereEtymologyData';
 import { D3Graph } from './D3Graph';
 import SidePanel from '../../components/SidePanel';
+import ApiSidePanel from '../../components/ApiSidePanel';
 import './EtymologyGraph.css';
 
 interface EtymologyGraphProps {
   initialWordId?: string;
   onNodeSelect?: (nodeId: string | null) => void;
   searchWordId?: string;
+  initialWord?: { word: string; language: string } | null;
 }
 
-export default function EtymologyGraph({ initialWordId, onNodeSelect, searchWordId }: EtymologyGraphProps) {
+export default function EtymologyGraph({ initialWordId, onNodeSelect, searchWordId, initialWord }: EtymologyGraphProps) {
+  // Use API hook if initialWord is provided, otherwise use static data
+  const staticGraphState = useGraphState({
+    etymologyData: currereEtymologyData,
+    initialWordId
+  });
+
+  const apiGraphState = useApiGraphState({
+    initialWord
+  });
+
+  // Choose which state to use based on whether we have initialWord
+  const graphState = initialWord ? apiGraphState : staticGraphState;
+
   const {
     nodes,
     edges,
@@ -22,10 +38,7 @@ export default function EtymologyGraph({ initialWordId, onNodeSelect, searchWord
     expandNode,
     focusOnWord,
     markNodeAsHavingParents
-  } = useGraphState({
-    etymologyData: currereEtymologyData,
-    initialWordId
-  });
+  } = graphState;
 
   const { simNodesRef } = useGraphLayout(nodes, edges, setNodes, true);
 
@@ -54,7 +67,17 @@ export default function EtymologyGraph({ initialWordId, onNodeSelect, searchWord
   };
 
   const handleWordClick = (wordId: string) => {
-    focusOnWord(wordId);
+    if (initialWord) {
+      // API mode: parse word and language from ID
+      const parts = wordId.split('__');
+      if (parts.length === 2) {
+        const [word, language] = parts;
+        (focusOnWord as (word: string, language: string) => void)(word, language);
+      }
+    } else {
+      // Static mode: use word ID directly
+      (focusOnWord as (wordId: string) => void)(wordId);
+    }
   };
 
   return (
@@ -69,11 +92,21 @@ export default function EtymologyGraph({ initialWordId, onNodeSelect, searchWord
           simulationNodesRef={simNodesRef as React.MutableRefObject<GraphNode[]>}
         />
       </div>
-      <SidePanel
-        selectedWordId={selectedNodeId}
-        onClose={handleClosePanel}
-        onWordClick={handleWordClick}
-      />
+      {initialWord ? (
+        <ApiSidePanel
+          selectedNodeId={selectedNodeId}
+          nodes={nodes}
+          edges={edges}
+          onClose={handleClosePanel}
+          onWordClick={handleWordClick}
+        />
+      ) : (
+        <SidePanel
+          selectedWordId={selectedNodeId}
+          onClose={handleClosePanel}
+          onWordClick={handleWordClick}
+        />
+      )}
     </div>
   );
 }
