@@ -35,6 +35,7 @@ export default function EtymologyGraph({ initialWordId, onNodeSelect, searchWord
     setNodes,
     selectedNodeId,
     setSelectedNodeId,
+    expandedNodeIds,
     expandNode,
     focusOnWord,
     markNodeAsHavingParents
@@ -44,7 +45,7 @@ export default function EtymologyGraph({ initialWordId, onNodeSelect, searchWord
 
   useEffect(() => {
     markNodeAsHavingParents();
-  }, [nodes, markNodeAsHavingParents]);
+  }, [edges, expandedNodeIds, markNodeAsHavingParents]);
 
   useEffect(() => {
     if (searchWordId) {
