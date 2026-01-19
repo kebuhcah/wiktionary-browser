@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { checkApiHealth, searchWords, getWordDetails, WordSearchResult, WordEntry } from '../api/etymologyApi';
 import { getLanguageName } from '../utils/languageNames';
 import './ApiDemo.css';
@@ -27,6 +27,9 @@ export default function ApiDemo({ onViewInGraph }: ApiDemoProps) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [history, setHistory] = useState<Array<{word: string, language: string, entries: WordEntry[]}>>([]);
 
+  // Cache for search results to avoid re-querying on backspace
+  const searchCacheRef = useRef<Map<string, WordSearchResult[]>>(new Map());
+
   // Check API availability on mount
   useEffect(() => {
     checkApiHealth().then(setIsApiAvailable);
@@ -39,10 +42,20 @@ export default function ApiDemo({ onViewInGraph }: ApiDemoProps) {
       return;
     }
 
+    // Always debounce, even for cached results, to avoid showing intermediate results
     const debounceTimeout = setTimeout(async () => {
+      // Check cache first
+      const cached = searchCacheRef.current.get(searchQuery);
+      if (cached) {
+        setSearchResults(cached);
+        return;
+      }
+
       try {
         setError(null);
         const results = await searchWords(searchQuery, 8);
+        // Store in cache
+        searchCacheRef.current.set(searchQuery, results);
         setSearchResults(results);
       } catch (err) {
         setError('Search failed');
