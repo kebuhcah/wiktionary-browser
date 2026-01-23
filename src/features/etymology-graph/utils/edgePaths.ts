@@ -1,18 +1,22 @@
-import { GraphNode } from '../useGraphState';
+import { GraphNode, GraphEdge } from '../useGraphState';
 
 /**
- * Generates an SVG path string for an edge between two nodes
- * The path starts just outside the source node's circle and ends just before the target node's circle
+ * Generates an SVG path string for an edge between two nodes with slight curvature
+ * to reduce edge overlap when multiple edges radiate from the same node.
  *
  * @param source - The source node
  * @param target - The target node
  * @param radius - The radius of the node circles (default: 30)
- * @returns SVG path string in the format "M x,y L x,y"
+ * @param edgeIndex - Optional index for multiple edges between nodes
+ * @param totalEdges - Optional total number of edges from source
+ * @returns SVG path string with quadratic Bézier curve
  */
 export function generateEdgePath(
   source: GraphNode,
   target: GraphNode,
-  radius: number = 30
+  radius: number = 30,
+  edgeIndex: number = 0,
+  totalEdges: number = 1
 ): string {
   const dx = target.x - source.x;
   const dy = target.y - source.y;
@@ -36,7 +40,25 @@ export function generateEdgePath(
   const targetX = target.x - unitX * (radius + arrowSpace);
   const targetY = target.y - unitY * (radius + arrowSpace);
 
-  return `M ${sourceX},${sourceY} L ${targetX},${targetY}`;
+  // Add curvature to reduce edge overlap
+  // Calculate perpendicular offset for the control point
+  const perpX = -unitY; // Perpendicular unit vector
+  const perpY = unitX;
+
+  // Midpoint of the edge
+  const midX = (sourceX + targetX) / 2;
+  const midY = (sourceY + targetY) / 2;
+
+  // Add slight curvature (20-30 pixels offset) based on edge index
+  // This spreads out edges that would otherwise overlap
+  const curvature = 25;
+  const offset = (edgeIndex % 2 === 0 ? 1 : -1) * curvature * (Math.floor(edgeIndex / 2) + 1) / Math.max(totalEdges / 2, 1);
+
+  const controlX = midX + perpX * offset;
+  const controlY = midY + perpY * offset;
+
+  // Use quadratic Bézier curve for smoother appearance
+  return `M ${sourceX},${sourceY} Q ${controlX},${controlY} ${targetX},${targetY}`;
 }
 
 /**

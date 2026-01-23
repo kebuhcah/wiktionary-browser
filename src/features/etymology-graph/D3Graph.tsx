@@ -197,6 +197,15 @@ export function D3Graph({
       viewport.append('g').attr('class', 'edges');
     }
 
+    // Count edges from each source node for curvature calculation
+    const edgesBySource = new Map<string, GraphEdge[]>();
+    edges.forEach(edge => {
+      if (!edgesBySource.has(edge.source)) {
+        edgesBySource.set(edge.source, []);
+      }
+      edgesBySource.get(edge.source)!.push(edge);
+    });
+
     const edgePaths = viewport
       .select('.edges')
       .selectAll<SVGPathElement, GraphEdge>('path')
@@ -211,7 +220,13 @@ export function D3Graph({
         const source = nodes.find(n => n.id === d.source);
         const target = nodes.find(n => n.id === d.target);
         if (!source || !target) return '';
-        return generateEdgePath(source, target, NODE_RADIUS);
+
+        // Get edge index and total count from source for curvature
+        const sourceEdges = edgesBySource.get(d.source) || [];
+        const edgeIndex = sourceEdges.indexOf(d);
+        const totalEdges = sourceEdges.length;
+
+        return generateEdgePath(source, target, NODE_RADIUS, edgeIndex, totalEdges);
       })
       .attr('stroke', d => d.style?.stroke || '#64748b')
       .attr('stroke-width', d => d.style?.strokeWidth || 2)
