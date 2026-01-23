@@ -57,9 +57,16 @@ export function useGraphState({ etymologyData, initialWordId }: UseGraphStatePro
     }
 
     const startWords = etymologyData.words.slice(0, 3);
+    const startWordIds = new Set(startWords.map(w => w.id));
+
+    // Include relationships between the initial nodes
+    const relevantRelationships = etymologyData.relationships.filter(rel =>
+      startWordIds.has(rel.source) && startWordIds.has(rel.target)
+    );
+
     return {
       nodes: convertWordsToNodes(startWords),
-      edges: [] as GraphEdge[]
+      edges: convertRelationshipsToEdges(relevantRelationships)
     };
   }, [etymologyData, initialWordId]);
 

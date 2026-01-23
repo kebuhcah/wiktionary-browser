@@ -312,7 +312,9 @@ export function D3Graph({
 
         if (svgWidth === 0 || svgHeight === 0) return;
 
-        const scale = Math.min(svgWidth / bbox.width, svgHeight / bbox.height, 1.5);
+        // For small number of nodes, use higher max scale
+        const maxScale = nodes.length <= 3 ? 1.5 : 1.0;
+        const scale = Math.min(svgWidth / bbox.width, svgHeight / bbox.height, maxScale);
         const translateX = svgWidth / 2 - scale * (bbox.minX + bbox.width / 2);
         const translateY = svgHeight / 2 - scale * (bbox.minY + bbox.height / 2);
 
@@ -323,7 +325,7 @@ export function D3Graph({
             zoomBehaviorRef.current!.transform,
             zoomIdentity.translate(translateX, translateY).scale(scale)
           );
-      }, 600); // Wait for simulation to settle
+      }, 800); // Increased wait time for disconnected nodes to settle
 
       return () => clearTimeout(timer);
     }

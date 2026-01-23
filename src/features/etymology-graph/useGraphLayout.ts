@@ -83,7 +83,7 @@ export function useGraphLayout(
         .strength(-120)     // Reduced repulsion for tighter grouping
       )
       .force('center', d3.forceCenter(0, 0)
-        .strength(0.05)     // Gentle centering to keep graph from drifting
+        .strength(0.3)      // Stronger centering to keep disconnected nodes together
       )
       .force('collide', d3.forceCollide()
         .radius(80)         // Prevent overlap with reasonable spacing
