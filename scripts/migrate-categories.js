@@ -132,32 +132,43 @@ const transaction = db.transaction(() => {
 
   let wordCount = 0;
   let junctionCount = 0;
+  let parseErrors = 0;
+  let missingCategories = 0;
 
   for (const word of wordStmt.iterate()) {
     try {
       const categories = JSON.parse(word.categories);
-      if (Array.isArray(categories)) {
+      if (Array.isArray(categories) && categories.length > 0) {
         for (const catName of categories) {
-          const categoryId = categoryMap.get(catName);
-          if (categoryId) {
-            insertJunction.run(
-              word.word,
-              word.language,
-              word.pos,
-              word.etymology_index,
-              categoryId
-            );
-            junctionCount++;
+          if (catName && typeof catName === 'string') {
+            const categoryId = categoryMap.get(catName);
+            if (categoryId) {
+              const result = insertJunction.run(
+                word.word,
+                word.language,
+                word.pos,
+                word.etymology_index,
+                categoryId
+              );
+              if (result.changes > 0) {
+                junctionCount++;
+              }
+            } else {
+              missingCategories++;
+            }
           }
         }
       }
     } catch (e) {
-      // Skip invalid JSON
+      parseErrors++;
+      if (parseErrors <= 5) {
+        console.log(`  Parse error for word ${word.word}: ${e.message}`);
+      }
     }
 
     wordCount++;
     if (wordCount % 50000 === 0) {
-      console.log(`  Processed ${wordCount.toLocaleString()} words, created ${junctionCount.toLocaleString()} associations...`);
+      console.log(`  Processed ${wordCount.toLocaleString()} words, created ${junctionCount.toLocaleString()} associations (${parseErrors} parse errors, ${missingCategories} missing category IDs)...`);
     }
   }
 
